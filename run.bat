@@ -1,7 +1,7 @@
 @echo off
-title Agentic AI - Weather Agent
+title SkyStream AI - Weather Agent
 echo.
-echo  ⚡  Agentic AI - Smart Weather Agent
+echo  ⚡  SkyStream AI - Smart Weather Agent
 echo  ════════════════════════════════════
 echo.
 echo  Starting server...

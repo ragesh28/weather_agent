@@ -1,5 +1,5 @@
 """
-Agentic AI — FastAPI Application
+SkyStream AI — FastAPI Application
 POST /ask endpoint that routes queries through a LangGraph workflow.
 
 Run with:
@@ -51,7 +51,7 @@ class AskResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Response body for the /health endpoint."""
     status: str = "ok"
-    service: str = "Agentic AI"
+    service: str = "SkyStream AI"
     version: str = "1.0.0"
 
 
@@ -63,13 +63,12 @@ class HealthResponse(BaseModel):
 async def lifespan(app: FastAPI):
     """Run startup checks and log configuration status."""
     print("=" * 50)
-    print("🚀 Agentic AI — Starting up...")
+    print("🚀 SkyStream AI — Starting up...")
     print("=" * 50)
 
     # Check for required API keys
     keys = {
         "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY"),
-        "WEATHER_API_KEY": os.getenv("WEATHER_API_KEY"),
         "NEWS_API_KEY": os.getenv("NEWS_API_KEY"),
     }
 
@@ -90,7 +89,7 @@ async def lifespan(app: FastAPI):
 
     yield  # App runs here
 
-    print("\n👋 Agentic AI — Shutting down.")
+    print("\n👋 SkyStream AI — Shutting down.")
 
 
 # ──────────────────────────────────────────────
@@ -98,7 +97,7 @@ async def lifespan(app: FastAPI):
 # ──────────────────────────────────────────────
 
 app = FastAPI(
-    title="Agentic AI",
+    title="SkyStream AI",
     description=(
         "An AI agent that routes user queries to the right tool:\n"
         "- **Weather** queries → OpenWeatherMap API\n"
