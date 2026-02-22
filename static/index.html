@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI — Smart Query Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a12;
+            --bg-secondary: #12121e;
+            --bg-card: rgba(22, 28, 50, 0.65);
+            --bg-input: rgba(18, 18, 34, 0.8);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-1: #6366f1;
+            --accent-2: #8b5cf6;
+            --accent-3: #a78bfa;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-orange: #fb923c;
+            --accent-rose: #fb7185;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --glow-1: rgba(99, 102, 241, 0.25);
+            --glow-2: rgba(139, 92, 246, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Animated Background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+            animation: bgShift 20s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-3%, 2%) rotate(3deg);
+            }
+        }
+
+        /* ── Header ── */
+        .header {
+            position: relative;
+            z-index: 10;
+            background: rgba(12, 12, 22, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-cyan));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 20px var(--glow-1);
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 20px var(--glow-1);
+            }
+
+            50% {
+                box-shadow: 0 4px 30px var(--glow-2), 0 0 40px rgba(99, 102, 241, 0.1);
+            }
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, var(--accent-3), var(--accent-cyan));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientText 4s ease infinite;
+        }
+
+        @keyframes gradientText {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .header p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--accent-green);
+            background: rgba(52, 211, 153, 0.08);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(52, 211, 153, 0.15);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* ── Chat Area ── */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Welcome card */
+        .welcome-card {
+            text-align: center;
+            padding: 3rem 2rem 2.5rem;
+            margin: auto 0;
+        }
+
+        .welcome-emoji {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .welcome-card h2 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-card p {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .chip {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 0.7rem 1.2rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chip:hover {
+            border-color: var(--accent-1);
+            color: var(--accent-3);
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        }
+
+        .chip-icon {
+            font-size: 1rem;
+        }
+
+        /* ── Messages ── */
+        .message {
+            display: flex;
+            gap: 0.8rem;
+            animation: msgIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .avatar.ai {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            box-shadow: 0 3px 12px var(--glow-1);
+        }
+
+        .avatar.user {
+            background: linear-gradient(135deg, var(--accent-rose), var(--accent-2));
+            box-shadow: 0 3px 12px rgba(251, 113, 133, 0.2);
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 1rem 1.3rem;
+            border-radius: 18px;
+            font-size: 0.87rem;
+            line-height: 1.65;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: white;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 20px var(--glow-1);
+        }
+
+        .message.ai .message-content {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-bottom-left-radius: 6px;
+        }
+
+        /* ── Copy Button ── */
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: all 0.25s ease;
+            opacity: 0;
+        }
+
+        .message-content:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-1);
+            color: var(--accent-3);
+        }
+
+        .copy-btn.copied {
+            background: rgba(52, 211, 153, 0.2);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            opacity: 1;
+        }
+
+        .intent-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .intent-tag.weather {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(99, 102, 241, 0.12));
+            color: var(--accent-cyan);
+        }
+
+        .intent-tag.news {
+            background: rgba(251, 146, 60, 0.12);
+            color: var(--accent-orange);
+        }
+
+        .intent-tag.other {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--accent-3);
+        }
+
+        .response-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ── Spelling Suggestion ── */
+        .spelling-notice {
+            background: rgba(251, 146, 60, 0.08);
+            border: 1px solid rgba(251, 146, 60, 0.15);
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+            color: var(--accent-orange);
+        }
+
+        .did-you-mean {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 10px;
+            padding: 0.6rem 0.9rem;
+            margin-top: 10px;
+            font-size: 0.82rem;
+        }
+
+        .did-you-mean a {
+            color: var(--accent-cyan);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .did-you-mean a:hover {
+            color: var(--accent-3);
+            text-decoration: underline;
+        }
+
+        /* ── Weather Card ── */
+        .weather-card {
+            background: linear-gradient(145deg, rgba(30, 58, 95, 0.7), rgba(22, 33, 62, 0.8));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(34, 211, 238, 0.1);
+            border-radius: 16px;
+            padding: 1.3rem;
+            margin-top: 8px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .weather-card:hover {
+            border-color: rgba(34, 211, 238, 0.25);
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.08);
+        }
+
+        .weather-card+.weather-card {
+            margin-top: 10px;
+        }
+
+        .weather-city {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.9rem;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.7rem;
+        }
+
+        .weather-item {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0;
+        }
+
+        .weather-item .icon {
+            font-size: 1.15rem;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
+        }
+
+        .weather-item .value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* ── News Card ── */
+        .news-list {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .news-item {
+            background: rgba(251, 146, 60, 0.04);
+            border: 1px solid rgba(251, 146, 60, 0.08);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            transition: all 0.25s ease;
+        }
+
+        .news-item:hover {
+            border-color: rgba(251, 146, 60, 0.2);
+            background: rgba(251, 146, 60, 0.08);
+            transform: translateX(4px);
+        }
+
+        .news-title {
+            font-size: 0.84rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .news-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .news-title a:hover {
+            color: var(--accent-orange);
+        }
+
+        .news-meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .news-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ── Loading ── */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            animation: msgIn 0.3s ease;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+            padding: 1rem 1.3rem;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-cyan));
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        /* ── Input Area ── */
+        .input-area {
+            position: relative;
+            z-index: 10;
+            background: rgba(12, 12, 22, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 1.2rem 2rem;
+        }
+
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.7rem;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 0.9rem 1.3rem;
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-1);
+            box-shadow: 0 0 0 3px var(--glow-1), 0 0 20px rgba(99, 102, 241, 0.08);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px var(--glow-1);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.08) translateY(-1px);
+            box-shadow: 0 6px 25px var(--glow-1);
+        }
+
+        .send-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* ── Scrollbar ── */
+        .chat-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .header {
+                padding: 0.9rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.05rem;
+            }
+
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .input-area {
+                padding: 1rem;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .suggestion-chips {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .copy-btn {
+                opacity: 1;
+            }
+
+            .welcome-card h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">⚡</div>
+            <div>
+                <h1>Agentic AI</h1>
+                <p>Weather · News · AI Assistant</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            Online
+        </div>
+    </header>
+
+    <!-- Chat -->
+    <div class="chat-container" id="chatContainer">
+        <div class="welcome-card" id="welcomeCard">
+            <span class="welcome-emoji">⚡</span>
+            <h2>Hey! I'm your AI Agent</h2>
+            <p>I can check weather for any village or city, fetch latest news, or answer any question you have.</p>
+            <div class="suggestion-chips">
+                <div class="chip" onclick="sendSuggestion('Weather in Chennai and Bangalore')">
+                    <span class="chip-icon">🌤️</span> Weather in Chennai & Bangalore
+                </div>
+                <div class="chip" onclick="sendSuggestion('kurinjipadi weather')">
+                    <span class="chip-icon">🌡️</span> Kurinjipadi Weather
+                </div>
+                <div class="chip" onclick="sendSuggestion('Latest news in India')">
+                    <span class="chip-icon">📰</span> Latest news in India
+                </div>
+                <div class="chip" onclick="sendSuggestion('What is quantum computing?')">
+                    <span class="chip-icon">🧠</span> What is quantum computing?
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+        <div class="input-wrapper">
+            <input type="text" class="input-field" id="queryInput"
+                placeholder="Ask me anything — weather, news, or any question..." autocomplete="off">
+            <button class="send-btn" id="sendBtn" onclick="sendQuery()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const queryInput = document.getElementById('queryInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const welcomeCard = document.getElementById('welcomeCard');
+
+        let isLoading = false;
+
+        // Enter key sends
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !isLoading) sendQuery();
+        });
+
+        function sendSuggestion(text) {
+            queryInput.value = text;
+            sendQuery();
+        }
+
+        async function sendQuery() {
+            const query = queryInput.value.trim();
+            if (!query || isLoading) return;
+
+            // Hide welcome card
+            if (welcomeCard) welcomeCard.style.display = 'none';
+
+            // Show user message
+            appendMessage('user', query);
+            queryInput.value = '';
+            isLoading = true;
+            sendBtn.disabled = true;
+
+            // Show typing indicator
+            const typingEl = showTyping();
+
+            try {
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+
+                const data = await res.json();
+
+                // Remove typing
+                typingEl.remove();
+
+                if (res.ok) {
+                    appendAIResponse(data);
+                } else {
+                    appendMessage('ai', `❌ Error: ${data.detail || 'Something went wrong.'}`, 'other');
+                }
+            } catch (err) {
+                typingEl.remove();
+                appendMessage('ai', `❌ Connection error: ${err.message}. Is the server running?`, 'other');
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                queryInput.focus();
+            }
+        }
+
+        function createCopyButton(textToCopy) {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.innerHTML = '📋';
+            btn.title = 'Copy to clipboard';
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    btn.innerHTML = '✓';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.innerHTML = '📋';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    const ta = document.createElement('textarea');
+                    ta.value = textToCopy;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    btn.innerHTML = '✓';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.innerHTML = '📋';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                }
+            });
+            return btn;
+        }
+
+        function appendMessage(role, text, intent) {
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${role}`;
+            avatar.textContent = role === 'user' ? '👤' : '⚡';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            if (role === 'ai' && intent) {
+                const tag = document.createElement('div');
+                tag.className = `intent-tag ${intent}`;
+                const icons = { weather: '🌤️', news: '📰', other: '🧠' };
+                tag.innerHTML = `${icons[intent] || '🧠'} ${intent}`;
+                content.appendChild(tag);
+            }
+
+            const textEl = document.createElement('div');
+            textEl.className = 'response-text';
+            textEl.textContent = text;
+            content.appendChild(textEl);
+
+            // Add copy button
+            content.appendChild(createCopyButton(text));
+
+            // Parse "Did you mean" suggestions
+            if (role === 'ai' && text.includes('Did you mean:')) {
+                const match = text.match(/Did you mean:\s*(.+)\?/);
+                if (match) {
+                    const suggestions = match[1].split(',').map(s => s.trim());
+                    const sugDiv = document.createElement('div');
+                    sugDiv.className = 'did-you-mean';
+                    sugDiv.innerHTML = '💡 Try: ' + suggestions.map(s =>
+                        `<a onclick="sendSuggestion('Weather in ${s}')">${s}</a>`
+                    ).join(', ');
+                    content.appendChild(sugDiv);
+                }
+            }
+
+            msg.appendChild(avatar);
+            msg.appendChild(content);
+            chatContainer.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function appendAIResponse(data) {
+            const intent = data.intent || 'other';
+            const response = data.response || 'No response.';
+
+            if (intent === 'weather' && response.includes('──────')) {
+                appendMultiWeatherCards(response, intent);
+            } else if (intent === 'weather' && response.includes('Temperature:')) {
+                appendWeatherCard(response, intent);
+            } else if (intent === 'news' && response.includes('Latest News')) {
+                appendNewsCards(response, intent);
+            } else {
+                appendMessage('ai', response, intent);
+            }
+        }
+
+        function parseWeatherData(text) {
+            const cityMatch = text.match(/Weather in (.+):/);
+            const tempMatch = text.match(/Temperature:\s*([\d.]+)°C\s*\(feels like ([\d.]+)°C\)/);
+            const condMatch = text.match(/Condition:\s*(.+)/);
+            const humMatch = text.match(/Humidity:\s*(\d+)%/);
+            const windMatch = text.match(/Wind Speed:\s*([\d.]+)\s*m\/s/);
+            const correctionMatch = text.match(/Showing weather for '(.+?)' \(you searched '(.+?)'\)/);
+
+            return {
+                city: cityMatch ? cityMatch[1] : 'Unknown',
+                temp: tempMatch ? tempMatch[1] : '—',
+                feels: tempMatch ? tempMatch[2] : '—',
+                cond: condMatch ? condMatch[1].trim() : '—',
+                hum: humMatch ? humMatch[1] : '—',
+                wind: windMatch ? windMatch[1] : '—',
+                correctedFrom: correctionMatch ? correctionMatch[2] : null,
+                correctedTo: correctionMatch ? correctionMatch[1] : null,
+            };
+        }
+
+        function buildWeatherCard(data) {
+            const card = document.createElement('div');
+            card.className = 'weather-card';
+
+            let html = '';
+
+            if (data.correctedFrom) {
+                html += `<div class="spelling-notice">💡 Showing weather for "${data.correctedTo}" (you searched "${data.correctedFrom}")</div>`;
+            }
+
+            html += `
+                <div class="weather-city">📍 ${data.city}</div>
+                <div class="weather-grid">
+                    <div class="weather-item">
+                        <span class="icon">🌡️</span>
+                        <div>Temperature<br><span class="value">${data.temp}°C</span></div>
+                    </div>
+                    <div class="weather-item">
+                        <span class="icon">🤗</span>
+                        <div>Feels Like<br><span class="value">${data.feels}°C</span></div>
+                    </div>
+                    <div class="weather-item">
+                        <span class="icon">☁️</span>
+                        <div>Condition<br><span class="value">${data.cond}</span></div>
+                    </div>
+                    <div class="weather-item">
+                        <span class="icon">💧</span>
+                        <div>Humidity<br><span class="value">${data.hum}%</span></div>
+                    </div>
+                    <div class="weather-item">
+                        <span class="icon">💨</span>
+                        <div>Wind Speed<br><span class="value">${data.wind} m/s</span></div>
+                    </div>
+                </div>
+            `;
+            card.innerHTML = html;
+            return card;
+        }
+
+        function appendWeatherCard(response, intent) {
+            const msg = document.createElement('div');
+            msg.className = 'message ai';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ai';
+            avatar.textContent = '⚡';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            const tag = document.createElement('div');
+            tag.className = 'intent-tag weather';
+            tag.innerHTML = '🌤️ weather';
+            content.appendChild(tag);
+
+            const data = parseWeatherData(response);
+            content.appendChild(buildWeatherCard(data));
+            content.appendChild(createCopyButton(response));
+
+            if (response.includes('Did you mean:')) {
+                const match = response.match(/Did you mean:\s*(.+)\?/);
+                if (match) {
+                    const suggestions = match[1].split(',').map(s => s.trim());
+                    const sugDiv = document.createElement('div');
+                    sugDiv.className = 'did-you-mean';
+                    sugDiv.innerHTML = '💡 Try: ' + suggestions.map(s =>
+                        `<a onclick="sendSuggestion('Weather in ${s}')">${s}</a>`
+                    ).join(', ');
+                    content.appendChild(sugDiv);
+                }
+            }
+
+            msg.appendChild(avatar);
+            msg.appendChild(content);
+            chatContainer.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function appendMultiWeatherCards(response, intent) {
+            const msg = document.createElement('div');
+            msg.className = 'message ai';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ai';
+            avatar.textContent = '⚡';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            const tag = document.createElement('div');
+            tag.className = 'intent-tag weather';
+            tag.innerHTML = '🌤️ multi-city weather';
+            content.appendChild(tag);
+
+            const parts = response.split(/─{10,}/);
+            parts.forEach(part => {
+                const trimmedPart = part.trim();
+                if (!trimmedPart || !trimmedPart.includes('Temperature:')) return;
+
+                const data = parseWeatherData(trimmedPart);
+                if (data.city !== 'Unknown') {
+                    content.appendChild(buildWeatherCard(data));
+                }
+
+                if (trimmedPart.includes('Weather Error') || trimmedPart.includes('Did you mean')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'weather-card';
+                    errorDiv.style.borderColor = 'rgba(251, 113, 133, 0.3)';
+                    errorDiv.innerHTML = `<div class="response-text">${trimmedPart.replace(/\n/g, '<br>')}</div>`;
+                    content.appendChild(errorDiv);
+                }
+            });
+
+            // Handle error-only parts
+            parts.forEach(part => {
+                const trimmedPart = part.trim();
+                if (!trimmedPart || trimmedPart.includes('Temperature:')) return;
+                if (trimmedPart.includes('Weather Error') || trimmedPart.includes('not found')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'weather-card';
+                    errorDiv.style.borderColor = 'rgba(251, 113, 133, 0.3)';
+                    errorDiv.innerHTML = `<div class="response-text" style="white-space:pre-wrap">${trimmedPart}</div>`;
+                    content.appendChild(errorDiv);
+                }
+            });
+
+            content.appendChild(createCopyButton(response));
+
+            msg.appendChild(avatar);
+            msg.appendChild(content);
+            chatContainer.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function appendNewsCards(response, intent) {
+            const msg = document.createElement('div');
+            msg.className = 'message ai';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ai';
+            avatar.textContent = '⚡';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            const tag = document.createElement('div');
+            tag.className = 'intent-tag news';
+            tag.innerHTML = '📰 news';
+            content.appendChild(tag);
+
+            const list = document.createElement('div');
+            list.className = 'news-list';
+
+            const items = response.split(/\n\s*\d+\.\s+/).filter(s => s.trim());
+            const articles = items.slice(1).length > 0 ? items.slice(1) : items;
+
+            articles.forEach(item => {
+                const titleMatch = item.match(/^(.+?)(?:\n|$)/);
+                const sourceMatch = item.match(/Source:\s*(.+?)(?:\n|$)/);
+                const descMatch = item.match(/[📝]\s*(.+?)(?:\n|$)/);
+                const urlMatch = item.match(/[🔗]\s*(https?:\/\/\S+)/);
+
+                const newsItem = document.createElement('div');
+                newsItem.className = 'news-item';
+
+                const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
+                const source = sourceMatch ? sourceMatch[1].trim() : '';
+                const desc = descMatch ? descMatch[1].trim() : '';
+                const url = urlMatch ? urlMatch[1].trim() : '';
+
+                newsItem.innerHTML = `
+                    <div class="news-title">${url ? `<a href="${url}" target="_blank">${title}</a>` : title}</div>
+                    ${source ? `<div class="news-meta">📌 ${source}</div>` : ''}
+                    ${desc ? `<div class="news-desc">${desc}</div>` : ''}
+                `;
+                list.appendChild(newsItem);
+            });
+
+            content.appendChild(list);
+            content.appendChild(createCopyButton(response));
+
+            msg.appendChild(avatar);
+            msg.appendChild(content);
+            chatContainer.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            const el = document.createElement('div');
+            el.className = 'typing-indicator';
+            el.innerHTML = `
+                <div class="avatar ai">⚡</div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chatContainer.appendChild(el);
+            scrollToBottom();
+            return el;
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
